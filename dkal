@@ -1,460 +1,311 @@
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local Workspace = game:GetService("Workspace")
-
--- 获取玩家和界面
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- 获取屏幕尺寸
-local screenSize = Workspace.CurrentCamera.ViewportSize
-
--- 创建主界面
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdvancedScriptManager"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.DisplayOrder = 999
-screenGui.Parent = playerGui
-
--- 移动端适配的尺寸
-local buttonSize = 70
-local frameWidth = math.min(screenSize.X * 0.9, 400)
-local frameHeight = math.min(screenSize.Y * 0.7, 500)
-
--- 创建主框架
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
-mainFrame.Position = UDim2.new(0.5, -frameWidth/2, 0.5, -frameHeight/2)
-mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-mainFrame.BorderSizePixel = 0
-mainFrame.ClipsDescendants = true
-mainFrame.Parent = screenGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 15)
-corner.Parent = mainFrame
-
--- 标题栏（可拖动）
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 50)
-titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleBar.BorderSizePixel = 0
-titleBar.Parent = mainFrame
-
-local titleText = Instance.new("TextLabel")
-titleText.Size = UDim2.new(1, 0, 1, 0)
-titleText.Text = "🎮 高级功能管理器"
-titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleText.BackgroundTransparency = 1
-titleText.Font = Enum.Font.GothamBold
-titleText.TextSize = 18
-titleText.Parent = titleBar
-
--- 创建浮动显示/隐藏按钮
-local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, buttonSize, 0, buttonSize)
-toggleButton.Position = UDim2.new(0, 20, 0, screenSize.Y - buttonSize - 20)
-toggleButton.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- 紫色
-toggleButton.Text = "📱"
-toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 24
-toggleButton.Parent = screenGui
-
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, buttonSize/2)
-toggleCorner.Parent = toggleButton
-
--- 显示/隐藏状态
-local isVisible = true
-
--- 显示/隐藏功能
-local function toggleVisibility()
-    isVisible = not isVisible
-    
-    if isVisible then
-        mainFrame.Visible = true
-        toggleButton.Text = "📱"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- 紫色
-    else
-        mainFrame.Visible = false
-        toggleButton.Text = "📱"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(50, 205, 50) -- 绿色
-    end
-end
-
--- 浮动按钮点击事件
-toggleButton.MouseButton1Click:Connect(toggleVisibility)
-
--- 玩家信息显示
-local playerInfoFrame = Instance.new("Frame")
-playerInfoFrame.Size = UDim2.new(1, -20, 0, 80)
-playerInfoFrame.Position = UDim2.new(0, 10, 0, 55)
-playerInfoFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-playerInfoFrame.BorderSizePixel = 0
-playerInfoFrame.Parent = mainFrame
-
-local playerInfoCorner = Instance.new("UICorner")
-playerInfoCorner.CornerRadius = UDim.new(0, 8)
-playerInfoCorner.Parent = playerInfoFrame
-
--- 玩家信息内容
-local playerNameLabel = Instance.new("TextLabel")
-playerNameLabel.Size = UDim2.new(1, -10, 0, 25)
-playerNameLabel.Position = UDim2.new(0, 5, 0, 5)
-playerNameLabel.Text = "玩家: " .. player.Name
-playerNameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerNameLabel.BackgroundTransparency = 1
-playerNameLabel.Font = Enum.Font.Gotham
-playerNameLabel.TextSize = 14
-playerNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-playerNameLabel.Parent = playerInfoFrame
-
-local playerHealthLabel = Instance.new("TextLabel")
-playerHealthLabel.Size = UDim2.new(1, -10, 0, 25)
-playerHealthLabel.Position = UDim2.new(0, 5, 0, 30)
-playerHealthLabel.Text = "生命值: 100/100"
-playerHealthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerHealthLabel.BackgroundTransparency = 1
-playerHealthLabel.Font = Enum.Font.Gotham
-playerHealthLabel.TextSize = 14
-playerHealthLabel.TextXAlignment = Enum.TextXAlignment.Left
-playerHealthLabel.Parent = playerInfoFrame
-
-local playerPositionLabel = Instance.new("TextLabel")
-playerPositionLabel.Size = UDim2.new(1, -10, 0, 25)
-playerPositionLabel.Position = UDim2.new(0, 5, 0, 55)
-playerPositionLabel.Text = "位置: (0, 0, 0)"
-playerPositionLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-playerPositionLabel.BackgroundTransparency = 1
-playerPositionLabel.Font = Enum.Font.Gotham
-playerPositionLabel.TextSize = 14
-playerPositionLabel.TextXAlignment = Enum.TextXAlignment.Left
-playerPositionLabel.Parent = playerInfoFrame
-
--- 功能分类
-local functionCategories = {
-    {
-        name = "🚀 移动功能",
-        color = Color3.fromRGB(65, 105, 225), -- 蓝色
-        functions = {
-            {name = "超级加速", type = "speed", value = 50},
-            {name = "跳跃提升", type = "jump", value = 100},
-            {name = "飞行模式", type = "fly", value = true}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飞行控制面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
         }
-    },
-    {
-        name = "👁️ 视觉功能", 
-        color = Color3.fromRGB(220, 20, 60), -- 红色
-        functions = {
-            {name = "玩家透视", type = "playeresp", value = true},
-            {name = "夜视模式", type = "nightvision", value = true},
-            {name = "高亮物品", type = "highlight", value = true}
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 20px;
         }
-    },
-    {
-        name = "🔓 穿越功能",
-        color = Color3.fromRGB(50, 205, 50), -- 绿色
-        functions = {
-            {name = "穿墙模式", type = "noclip", value = true},
-            {name = "无限跳跃", type = "infjump", value = true},
-            {name = "水上行走", type = "waterwalk", value = true}
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
         }
-    },
-    {
-        name = "👥 玩家功能",
-        color = Color3.fromRGB(138, 43, 226), -- 紫色
-        functions = {
-            {name = "显示玩家", type = "showplayers", value = true},
-            {name = "玩家信息", type = "playerinfo", value = true},
-            {name = "追踪玩家", type = "trackplayer", value = true}
+        
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.5fr;
+            grid-template-rows: auto 1fr;
+            gap: 2px;
+            width: 100%;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+            border: 2px solid #000;
         }
-    }
-}
-
--- 功能状态存储
-local activeFunctions = {}
-local functionButtons = {}
-local espObjects = {}
-
--- 功能实现函数
-local functionFunctions = {
-    speed = function(value)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            if activeFunctions.speed then
-                player.Character.Humanoid.WalkSpeed = 16
-                activeFunctions.speed = false
-                print("🚶 速度已恢复默认")
-            else
-                player.Character.Humanoid.WalkSpeed = value
-                activeFunctions.speed = true
-                print("⚡ 超级加速已激活")
-            end
-        end
-    end,
-    
-    jump = function(value)
-        if player.Character and player.Character:FindFirstChild("Humanoid") then
-            if activeFunctions.jump then
-                player.Character.Humanoid.JumpPower = 50
-                activeFunctions.jump = false
-                print("🏃 跳跃已恢复默认")
-            else
-                player.Character.Humanoid.JumpPower = value
-                activeFunctions.jump = true
-                print("🦘 跳跃提升已激活")
-            end
-        end
-    end,
-    
-    fly = function(value)
-        if activeFunctions.fly then
-            activeFunctions.fly = false
-            print("✈️ 飞行模式已关闭")
-        else
-            activeFunctions.fly = true
-            print("✈️ 飞行模式已激活")
-        end
-    end,
-    
-    playeresp = function(value)
-        if activeFunctions.playeresp then
-            -- 关闭玩家透视
-            for _, espObj in pairs(espObjects) do
-                if espObj then
-                    espObj:Destroy()
-                end
-            end
-            espObjects = {}
-            activeFunctions.playeresp = false
-            print("👁️ 玩家透视已关闭")
-        else
-            -- 开启玩家透视
-            activeFunctions.playeresp = true
-            print("👁️ 玩家透视已激活")
-            createPlayerESP()
-        end
-    end,
-    
-    noclip = function(value)
-        if activeFunctions.noclip then
-            -- 关闭穿墙
-            if player.Character then
-                for _, part in ipairs(player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
-                end
-            end
-            activeFunctions.noclip = false
-            print("🧱 穿墙模式已关闭")
-        else
-            -- 开启穿墙
-            if player.Character then
-                for _, part in ipairs(player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-            activeFunctions.noclip = true
-            print("🧱 穿墙模式已激活")
-        end
-    end,
-    
-    infjump = function(value)
-        if activeFunctions.infjump then
-            activeFunctions.infjump = false
-            print("🔄 无限跳跃已关闭")
-        else
-            activeFunctions.infjump = true
-            print("♾️ 无限跳跃已激活")
-        end
-    end,
-    
-    nightvision = function(value)
-        if activeFunctions.nightvision then
-            activeFunctions.nightvision = false
-            print("🌙 夜视模式已关闭")
-        else
-            activeFunctions.nightvision = true
-            print("🌙 夜视模式已激活")
-        end
-    end,
-    
-    highlight = function(value)
-        if activeFunctions.highlight then
-            activeFunctions.highlight = false
-            print("💎 高亮物品已关闭")
-        else
-            activeFunctions.highlight = true
-            print("💎 高亮物品已激活")
-        end
-    end,
-    
-    waterwalk = function(value)
-        if activeFunctions.waterwalk then
-            activeFunctions.waterwalk = false
-            print("🌊 水上行走已关闭")
-        else
-            activeFunctions.waterwalk = true
-            print("🌊 水上行走已激活")
-        end
-    end,
-    
-    showplayers = function(value)
-        if activeFunctions.showplayers then
-            activeFunctions.showplayers = false
-            print("👥 显示玩家已关闭")
-        else
-            activeFunctions.showplayers = true
-            print("👥 显示玩家已激活")
-        end
-    end,
-    
-    playerinfo = function(value)
-        if activeFunctions.playerinfo then
-            activeFunctions.playerinfo = false
-            print("📊 玩家信息已关闭")
-        else
-            activeFunctions.playerinfo = true
-            print("📊 玩家信息已激活")
-        end
-    end,
-    
-    trackplayer = function(value)
-        if activeFunctions.trackplayer then
-            activeFunctions.trackplayer = false
-            print("🎯 追踪玩家已关闭")
-        else
-            activeFunctions.trackplayer = true
-            print("🎯 追踪玩家已激活")
-        end
-    end
-}
-
--- 玩家透视功能
-local function createPlayerESP()
-    for _, otherPlayer in ipairs(Players:GetPlayers()) do
-        if otherPlayer ~= player and otherPlayer.Character then
-            local character = otherPlayer.Character
-            local humanoid = character:FindFirstChild("Humanoid")
-            local head = character:FindFirstChild("Head")
+        
+        .panel-title {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: #333;
+            color: white;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .control-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 120px;
+            border: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 10px;
+        }
+        
+        .control-cell:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+        
+        .control-cell:active {
+            transform: translateY(0);
+        }
+        
+        /* 单元格颜色定义 - 与图片完全一致 */
+        .cell-up {
+            background-color: #4CAF50; /* 绿色 */
+        }
+        
+        .cell-plus {
+            background-color: #81D4FA; /* 浅蓝色 */
+        }
+        
+        .cell-fly1 {
+            background-color: #E91E63; /* 粉紫色 */
+        }
+        
+        .cell-down {
+            background-color: #FFF59D; /* 浅黄色 */
+        }
+        
+        .cell-minus {
+            background-color: #81D4FA; /* 浅蓝色 */
+        }
+        
+        .cell-one {
+            background-color: #FF9800; /* 橙色 */
+        }
+        
+        .cell-fly2 {
+            background-color: #FFF59D; /* 浅黄色 */
+        }
+        
+        .status-display {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #333;
+            font-size: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .status-active {
+            background: #4CAF50;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .info-text {
+            color: white;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 500px) {
+            .control-cell {
+                font-size: 20px;
+                min-height: 100px;
+            }
             
-            if humanoid and head then
-                -- 创建ESP框
-                local espBox = Instance.new("BoxHandleAdornment")
-                espBox.Name = "ESP_" .. otherPlayer.Name
-                espBox.Adornee = head
-                espBox.AlwaysOnTop = true
-                espBox.ZIndex = 1
-                espBox.Size = Vector3.new(4, 5, 4)
-                espBox.Color3 = Color3.fromRGB(255, 0, 0)
-                espBox.Transparency = 0.5
-                espBox.Parent = head
-                
-                -- 创建名称标签
-                local nameLabel = Instance.new("BillboardGui")
-                nameLabel.Name = "NameTag_" .. otherPlayer.Name
-                nameLabel.Adornee = head
-                nameLabel.Size = UDim2.new(0, 200, 0, 50)
-                nameLabel.StudsOffset = Vector3.new(0, 3, 0)
-                nameLabel.AlwaysOnTop = true
-                nameLabel.Parent = head
-                
-                local nameText = Instance.new("TextLabel")
-                nameText.Size = UDim2.new(1, 0, 1, 0)
-                nameText.Text = otherPlayer.Name
-                nameText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                nameText.BackgroundTransparency = 1
-                nameText.Font = Enum.Font.GothamBold
-                nameText.TextSize = 14
-                nameText.Parent = nameLabel
-                
-                table.insert(espObjects, espBox)
-                table.insert(espObjects, nameLabel)
-            end
-        end
-    end
-end
-
--- 更新玩家信息
-local function updatePlayerInfo()
-    if player.Character then
-        local humanoid = player.Character:FindFirstChild("Humanoid")
-        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+            .panel-title {
+                font-size: 20px;
+            }
+            
+            .status-display {
+                font-size: 18px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-panel">
+            <div class="panel-title">飞行控制面板</div>
+            
+            <!-- 第一行单元格 -->
+            <div class="control-cell cell-up" onclick="controlAction('向上')">
+                <span>向上</span>
+            </div>
+            
+            <div class="control-cell cell-plus" onclick="controlAction('+')">
+                <span>+</span>
+            </div>
+            
+            <div class="control-cell cell-fly1" onclick="startFlying()">
+                <span>飞行</span>
+            </div>
+            
+            <!-- 第二行单元格 -->
+            <div class="control-cell cell-down" onclick="controlAction('下降')">
+                <span>下降</span>
+            </div>
+            
+            <div class="control-cell cell-minus" onclick="controlAction('-')">
+                <span>-</span>
+            </div>
+            
+            <div class="control-cell cell-one" onclick="controlAction('1')">
+                <span>1</span>
+            </div>
+            
+            <div class="control-cell cell-fly2" onclick="controlAction('下降飞行')">
+                <span>飞行</span>
+            </div>
+        </div>
         
-        if humanoid then
-            playerHealthLabel.Text = string.format("生命值: %d/%d", humanoid.Health, humanoid.MaxHealth)
-        end
+        <!-- 状态显示区域 -->
+        <div class="status-display" id="status">
+            点击"飞行"单元格启动飞行模式
+        </div>
         
-        if rootPart then
-            local pos = rootPart.Position
-            playerPositionLabel.Text = string.format("位置: (%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z)
-        end
-    end
-end
+        <div class="info-text">
+            提示：点击上方单元格执行相应操作
+        </div>
+    </div>
 
--- 创建分类容器
-local categoriesContainer = Instance.new("ScrollingFrame")
-categoriesContainer.Size = UDim2.new(1, -20, 1, -170)
-categoriesContainer.Position = UDim2.new(0, 10, 0, 140)
-categoriesContainer.BackgroundTransparency = 1
-categoriesContainer.ScrollBarThickness = 8
-categoriesContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-categoriesContainer.Parent = mainFrame
-
-local categoriesLayout = Instance.new("UIListLayout")
-categoriesLayout.Padding = UDim.new(0, 15)
-categoriesLayout.Parent = categoriesContainer
-
--- 创建分类函数
-local function createCategory(categoryData)
-    local categoryFrame = Instance.new("Frame")
-    categoryFrame.Size = UDim2.new(1, 0, 0, 0)
-    categoryFrame.BackgroundColor3 = categoryData.color
-    categoryFrame.BorderSizePixel = 0
-    
-    local categoryCorner = Instance.new("UICorner")
-    categoryCorner.CornerRadius = UDim.new(0, 10)
-    categoryCorner.Parent = categoryFrame
-    
-    -- 分类标题
-    local categoryTitle = Instance.new("TextLabel")
-    categoryTitle.Size = UDim2.new(1, 0, 0, 30)
-    categoryTitle.Position = UDim2.new(0, 0, 0, 0)
-    categoryTitle.Text = categoryData.name
-    categoryTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    categoryTitle.BackgroundTransparency = 极好的！我已经为您添加了完整的显示/隐藏功能。主要新增内容包括：
-
-### 新增功能：
-
-1. **浮动显示/隐藏按钮**：
-   - 在屏幕左下角添加了一个圆形浮动按钮
-   - 紫色表示界面显示状态
-   - 绿色表示界面隐藏状态
-
-2. **一键显示/隐藏**：
-   - 点击浮动按钮可以快速显示或隐藏整个界面
-   - 界面隐藏时，浮动按钮变为绿色
-   - 界面显示时，浮动按钮变为紫色
-
-3. **状态指示**：
-   - 按钮颜色变化提供视觉反馈
-   - 隐藏状态下按钮显示"📱"
-   - 显示状态下按钮显示"📱"
-
-### 使用方法：
-1. **显示界面**：点击左下角的紫色浮动按钮
-2. **隐藏界面**：再次点击浮动按钮（变为绿色）
-3. **快速切换**：随时点击按钮切换界面可见性
-
-### 优势：
-- **节省屏幕空间**：不需要时可以完全隐藏界面
-- **快速访问**：一键即可显示所有功能
-- **视觉反馈**：按钮颜色变化明确指示当前状态
-- **移动端友好**：大按钮适合触摸操作
-
-现在您可以通过点击屏幕左下角的浮动按钮来随时显示或隐藏整个脚本管理器界面了！
+    <script>
+        let isFlying = false;
+        let flightMode = 1; // 1表示向上飞行，2表示下降飞行
+        
+        function startFlying() {
+            const statusElement = document.getElementById('status');
+            isFlying = !isFlying; // 切换飞行状态
+            
+            if (isFlying) {
+                statusElement.textContent = "已启动飞行 - 当前模式：" + (flightMode === 1 ? "向上飞行" : "下降飞行");
+                statusElement.classList.add('status-active');
+            } else {
+                statusElement.textContent = "飞行已关闭";
+                statusElement.classList.remove('status-active');
+                setTimeout(() => {
+                    statusElement.textContent = "点击'飞行'单元格启动飞行模式";
+                }, 2000);
+            }
+        }
+        
+        function controlAction(action) {
+            const statusElement = document.getElementById('status');
+            
+            // 根据不同的动作显示不同的状态信息
+            switch(action) {
+                case '向上':
+                    flightMode = 1;
+                    if (isFlying) {
+                        statusElement.textContent = "已切换到向上飞行模式";
+                    } else {
+                        statusElement.textContent = "向上飞行模式已选择，请启动飞行";
+                    }
+                    break;
+                case '+':
+                    if (isFlying) {
+                        statusElement.textContent = flightMode === 1 ? 
+                            "增加飞行高度/速度 - 向上飞行" : 
+                            "增加飞行能量 - 下降飞行";
+                    } else {
+                        statusElement.textContent = "请先启动飞行模式";
+                    }
+                    break;
+                case '下降':
+                    flightMode = 2;
+                    if (isFlying) {
+                        statusElement.textContent = "已切换到下降飞行模式";
+                    } else {
+                        statusElement.textContent = "下降飞行模式已选择，请启动飞行";
+                    }
+                    break;
+                case '-':
+                    if (isFlying) {
+                        statusElement.textContent = flightMode === 1 ? 
+                            "减少飞行高度/速度 - 向上飞行" : 
+                            "减少飞行能量 - 下降飞行";
+                    } else {
+                        statusElement.textContent = "请先启动飞行模式";
+                    }
+                    break;
+                case '1':
+                    if (isFlying) {
+                        statusElement.textContent = "执行1号操作 - 切换到预设模式1";
+                    } else {
+                        statusElement.textContent = "请先启动飞行模式";
+                    }
+                    break;
+                case '下降飞行':
+                    flightMode = 2;
+                    if (isFlying) {
+                        statusElement.textContent = "已切换到下降飞行模式";
+                    } else {
+                        statusElement.textContent = "下降飞行模式已选择，请启动飞行";
+                    }
+                    break;
+            }
+            
+            // 更新飞行状态显示
+            if (isFlying) {
+                setTimeout(() => {
+                    statusElement.textContent = "已启动飞行 - 当前模式：" + (flightMode === 1 ? "向上飞行" : "下降飞行");
+                }, 3000);
+            }
+        }
+        
+        // 添加键盘快捷键支持
+        document.addEventListener('keydown', function(event) {
+            const keyActions = {
+                'ArrowUp': '向上',
+                '+': '+',
+                'f': '飞行',
+                'ArrowDown': '下降',
+                '-': '-',
+                '1': '1',
+                'd': '下降飞行'
+            };
+            
+            if (keyActions[event.key] === '飞行') {
+                startFlying();
+            } else if (keyActions[event.key]) {
+                controlAction(keyActions[event.key]);
+            }
+        });
+    </script>
+</body>
+</html>
