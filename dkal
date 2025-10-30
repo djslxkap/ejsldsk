@@ -1,311 +1,528 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>飞行控制面板</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Microsoft YaHei', sans-serif;
-        }
-        
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            padding: 20px;
-        }
-        
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 600px;
-        }
-        
-        .control-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1.5fr;
-            grid-template-rows: auto 1fr;
-            gap: 2px;
-            width: 100%;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            margin-bottom: 20px;
-            border: 2px solid #000;
-        }
-        
-        .panel-title {
-            grid-column: 1 / -1;
-            text-align: center;
-            background: #333;
-            color: white;
-            padding: 15px;
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .control-cell {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 120px;
-            border: none;
-            font-size: 24px;
-            font-weight: bold;
-            color: #000;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            padding: 10px;
-        }
-        
-        .control-cell:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-        }
-        
-        .control-cell:active {
-            transform: translateY(0);
-        }
-        
-        /* 单元格颜色定义 - 与图片完全一致 */
-        .cell-up {
-            background-color: #4CAF50; /* 绿色 */
-        }
-        
-        .cell-plus {
-            background-color: #81D4FA; /* 浅蓝色 */
-        }
-        
-        .cell-fly1 {
-            background-color: #E91E63; /* 粉紫色 */
-        }
-        
-        .cell-down {
-            background-color: #FFF59D; /* 浅黄色 */
-        }
-        
-        .cell-minus {
-            background-color: #81D4FA; /* 浅蓝色 */
-        }
-        
-        .cell-one {
-            background-color: #FF9800; /* 橙色 */
-        }
-        
-        .cell-fly2 {
-            background-color: #FFF59D; /* 浅黄色 */
-        }
-        
-        .status-display {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            color: #333;
-            font-size: 20px;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .status-active {
-            background: #4CAF50;
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        
-        .info-text {
-            color: white;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        @media (max-width: 500px) {
-            .control-cell {
-                font-size: 20px;
-                min-height: 100px;
-            }
-            
-            .panel-title {
-                font-size: 20px;
-            }
-            
-            .status-display {
-                font-size: 18px;
-                padding: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="control-panel">
-            <div class="panel-title">飞行控制面板</div>
-            
-            <!-- 第一行单元格 -->
-            <div class="control-cell cell-up" onclick="controlAction('向上')">
-                <span>向上</span>
-            </div>
-            
-            <div class="control-cell cell-plus" onclick="controlAction('+')">
-                <span>+</span>
-            </div>
-            
-            <div class="control-cell cell-fly1" onclick="startFlying()">
-                <span>飞行</span>
-            </div>
-            
-            <!-- 第二行单元格 -->
-            <div class="control-cell cell-down" onclick="controlAction('下降')">
-                <span>下降</span>
-            </div>
-            
-            <div class="control-cell cell-minus" onclick="controlAction('-')">
-                <span>-</span>
-            </div>
-            
-            <div class="control-cell cell-one" onclick="controlAction('1')">
-                <span>1</span>
-            </div>
-            
-            <div class="control-cell cell-fly2" onclick="controlAction('下降飞行')">
-                <span>飞行</span>
-            </div>
-        </div>
-        
-        <!-- 状态显示区域 -->
-        <div class="status-display" id="status">
-            点击"飞行"单元格启动飞行模式
-        </div>
-        
-        <div class="info-text">
-            提示：点击上方单元格执行相应操作
-        </div>
-    </div>
+-- 罗布乐斯多功能脚本 v2.1
+-- 作者: AI助手
+-- 功能: 多种游戏功能 + 卡密验证系统 + 显示隐藏功能
 
-    <script>
-        let isFlying = false;
-        let flightMode = 1; // 1表示向上飞行，2表示下降飞行
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+
+-- 卡密系统配置
+local LicenseSystem = {
+    ValidKeys = {
+        "ROBLOX2024-PREMIUM-ULTRA",
+        "GAMING-SCRIPT-PRO-MAX",
+        "FREE-SCRIPT-VIP-ACCESS",
+        "TEST-KEY-1234567890",
+        "ADMIN-ACCESS-ROBLOX-PRO"
+    },
+    
+    ActivatedKeys = {},
+    KeyExpiry = {}, -- 可以添加密钥过期时间
+    MaxActivations = 3 -- 每个密钥最大激活次数
+}
+
+-- GUI 界面创建
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MultiScriptGUI"
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 400, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+-- 标题栏
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 40)
+TitleBar.Position = UDim2.new(0, 0, 0, 0)
+TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+TitleBar.Parent = MainFrame
+
+-- 标题
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.7, 0, 1, 0)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "多功能脚本 v2.1"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+-- 最小化按钮
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(0.7, 0, 0.125, 0)
+MinimizeButton.Text = "_"
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 16
+MinimizeButton.Parent = TitleBar
+
+-- 隐藏按钮
+local HideButton = Instance.new("TextButton")
+HideButton.Size = UDim2.new(0, 30, 0, 30)
+HideButton.Position = UDim2.new(0.8, 0, 0.125, 0)
+HideButton.Text = "◻"
+HideButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+HideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HideButton.TextSize = 14
+HideButton.Parent = TitleBar
+
+-- 关闭按钮
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(0.9, 0, 0.125, 0)
+CloseButton.Text = "X"
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Parent = TitleBar
+
+-- 卡密输入框
+local KeyBox = Instance.new("TextBox")
+KeyBox.Size = UDim2.new(0.7, 0, 0, 35)
+KeyBox.Position = UDim2.new(0.05, 0, 0.1, 40)
+KeyBox.PlaceholderText = "请输入卡密..."
+KeyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.Parent = MainFrame
+
+-- 激活按钮
+local ActivateButton = Instance.new("TextButton")
+ActivateButton.Size = UDim2.new(0.2, 0, 0, 35)
+ActivateButton.Position = UDim2.new(0.77, 0, 0.1, 40)
+ActivateButton.Text = "激活"
+ActivateButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+ActivateButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActivateButton.Parent = MainFrame
+
+-- 状态显示
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 30)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.18, 40)
+StatusLabel.Text = "状态: 未激活"
+StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Parent = MainFrame
+
+-- 功能按钮框架
+local FunctionsFrame = Instance.new("ScrollingFrame")
+FunctionsFrame.Size = UDim2.new(0.9, 0, 0.7, 0)
+FunctionsFrame.Position = UDim2.new(0.05, 0, 0.25, 40)
+FunctionsFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+FunctionsFrame.ScrollBarThickness = 5
+FunctionsFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
+FunctionsFrame.Parent = MainFrame
+
+-- 迷你控制栏 (隐藏时显示)
+local MiniControl = Instance.new("Frame")
+MiniControl.Size = UDim2.new(0, 150, 0, 40)
+MiniControl.Position = UDim2.new(0, 10, 0, 10)
+MiniControl.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+MiniControl.BorderSizePixel = 0
+MiniControl.Active = true
+MiniControl.Draggable = true
+MiniControl.Visible = false
+MiniControl.Parent = ScreenGui
+
+local MiniTitle = Instance.new("TextLabel")
+MiniTitle.Size = UDim2.new(0.6, 0, 1, 0)
+MiniTitle.Position = UDim2.new(0, 0, 0, 0)
+MiniTitle.BackgroundTransparency = 1
+MiniTitle.Text = "脚本控制"
+MiniTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+MiniTitle.TextSize = 12
+MiniTitle.Font = Enum.Font.Gotham
+MiniTitle.TextXAlignment = Enum.TextXAlignment.Left
+MiniTitle.Parent = MiniControl
+
+local ShowButton = Instance.new("TextButton")
+ShowButton.Size = UDim2.new(0, 30, 0, 30)
+ShowButton.Position = UDim2.new(0.6, 0, 0.125, 0)
+ShowButton.Text = "□"
+ShowButton.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
+ShowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShowButton.TextSize = 12
+ShowButton.Parent = MiniControl
+
+local CloseMiniButton = Instance.new("TextButton")
+CloseMiniButton.Size = UDim2.new(0, 30, 0, 30)
+CloseMiniButton.Position = UDim2.new(0.8, 0, 0.125, 0)
+CloseMiniButton.Text = "X"
+CloseMiniButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+CloseMiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseMiniButton.Parent = MiniControl
+
+-- 界面状态管理
+local UIManager = {
+    IsMinimized = false,
+    IsHidden = false,
+    OriginalSize = UDim2.new(0, 400, 0, 500),
+    MinimizedSize = UDim2.new(0, 400, 0, 40),
+    
+    Minimize = function()
+        UIManager.IsMinimized = true
+        MainFrame.Size = UIManager.MinimizedSize
+        FunctionsFrame.Visible = false
+        KeyBox.Visible = false
+        ActivateButton.Visible = false
+        StatusLabel.Visible = false
+        MinimizeButton.Text = "□"
+    end,
+    
+    Restore = function()
+        UIManager.IsMinimized = false
+        MainFrame.Size = UIManager.OriginalSize
+        FunctionsFrame.Visible = true
+        KeyBox.Visible = true
+        ActivateButton.Visible = true
+        StatusLabel.Visible = true
+        MinimizeButton.Text = "_"
+    end,
+    
+    Hide = function()
+        UIManager.IsHidden = true
+        MainFrame.Visible = false
+        MiniControl.Visible = true
+        HideButton.Text = "□"
+    end,
+    
+    Show = function()
+        UIManager.IsHidden = false
+        MainFrame.Visible = true
+        MiniControl.Visible = false
+        HideButton.Text = "◻"
+    end,
+    
+    ToggleMinimize = function()
+        if UIManager.IsMinimized then
+            UIManager.Restore()
+        else
+            UIManager.Minimize()
+        end
+    end,
+    
+    ToggleHide = function()
+        if UIManager.IsHidden then
+            UIManager.Show()
+        else
+            UIManager.Hide()
+        end
+    end
+}
+
+-- 脚本功能类
+local ScriptFunctions = {
+    Activated = false,
+    
+    -- 飞行功能
+    Fly = function()
+        local player = Players.LocalPlayer
+        local character = player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
         
-        function startFlying() {
-            const statusElement = document.getElementById('status');
-            isFlying = !isFlying; // 切换飞行状态
-            
-            if (isFlying) {
-                statusElement.textContent = "已启动飞行 - 当前模式：" + (flightMode === 1 ? "向上飞行" : "下降飞行");
-                statusElement.classList.add('status-active');
-            } else {
-                statusElement.textContent = "飞行已关闭";
-                statusElement.classList.remove('status-active');
-                setTimeout(() => {
-                    statusElement.textContent = "点击'飞行'单元格启动飞行模式";
-                }, 2000);
-            }
-        }
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(0, 0, 0)
+        bodyVelocity.Parent = character:FindFirstChild("HumanoidRootPart")
         
-        function controlAction(action) {
-            const statusElement = document.getElementById('status');
-            
-            // 根据不同的动作显示不同的状态信息
-            switch(action) {
-                case '向上':
-                    flightMode = 1;
-                    if (isFlying) {
-                        statusElement.textContent = "已切换到向上飞行模式";
-                    } else {
-                        statusElement.textContent = "向上飞行模式已选择，请启动飞行";
-                    }
-                    break;
-                case '+':
-                    if (isFlying) {
-                        statusElement.textContent = flightMode === 1 ? 
-                            "增加飞行高度/速度 - 向上飞行" : 
-                            "增加飞行能量 - 下降飞行";
-                    } else {
-                        statusElement.textContent = "请先启动飞行模式";
-                    }
-                    break;
-                case '下降':
-                    flightMode = 2;
-                    if (isFlying) {
-                        statusElement.textContent = "已切换到下降飞行模式";
-                    } else {
-                        statusElement.textContent = "下降飞行模式已选择，请启动飞行";
-                    }
-                    break;
-                case '-':
-                    if (isFlying) {
-                        statusElement.textContent = flightMode === 1 ? 
-                            "减少飞行高度/速度 - 向上飞行" : 
-                            "减少飞行能量 - 下降飞行";
-                    } else {
-                        statusElement.textContent = "请先启动飞行模式";
-                    }
-                    break;
-                case '1':
-                    if (isFlying) {
-                        statusElement.textContent = "执行1号操作 - 切换到预设模式1";
-                    } else {
-                        statusElement.textContent = "请先启动飞行模式";
-                    }
-                    break;
-                case '下降飞行':
-                    flightMode = 2;
-                    if (isFlying) {
-                        statusElement.textContent = "已切换到下降飞行模式";
-                    } else {
-                        statusElement.textContent = "下降飞行模式已选择，请启动飞行";
-                    }
-                    break;
-            }
-            
-            // 更新飞行状态显示
-            if (isFlying) {
-                setTimeout(() => {
-                    statusElement.textContent = "已启动飞行 - 当前模式：" + (flightMode === 1 ? "向上飞行" : "下降飞行");
-                }, 3000);
-            }
-        }
+        local flying = true
+        local flySpeed = 50
         
-        // 添加键盘快捷键支持
-        document.addEventListener('keydown', function(event) {
-            const keyActions = {
-                'ArrowUp': '向上',
-                '+': '+',
-                'f': '飞行',
-                'ArrowDown': '下降',
-                '-': '-',
-                '1': '1',
-                'd': '下降飞行'
-            };
-            
-            if (keyActions[event.key] === '飞行') {
-                startFlying();
-            } else if (keyActions[event.key]) {
-                controlAction(keyActions[event.key]);
-            }
-        });
-    </script>
-</body>
-</html>
+        UserInputService.InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.F then
+                flying = not flying
+                if flying then
+                    bodyVelocity.MaxForce = Vector3.new(100000, 100000, 100000)
+                else
+                    bodyVelocity.MaxForce = Vector3.new(0, 0, 0)
+                end
+            end
+        end)
+        
+        game:GetService("RunService").Stepped:Connect(function()
+            if flying and character and character:FindFirstChild("HumanoidRootPart") then
+                local root = character.HumanoidRootPart
+                local camera = workspace.CurrentCamera
+                
+                local direction = Vector3.new()
+                
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                    direction = direction + camera.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                    direction = direction - camera.CFrame.LookVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                    direction = direction - camera.CFrame.RightVector
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                    direction = direction + camera.CFrame.RightVector
+                end
+                
+                direction = direction.Unit * flySpeed
+                bodyVelocity.Velocity = Vector3.new(direction.X, 0, direction.Z)
+                
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + Vector3.new(0, flySpeed, 0)
+                end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity - Vector3.new(0, flySpeed, 0)
+                end
+            end
+        end)
+    end,
+    
+    -- 穿墙功能
+    Noclip = function()
+        local player = Players.LocalPlayer
+        local character = player.CharacterAdded:Wait()
+        
+        game:GetService("RunService").Stepped:Connect(function()
+            if character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end,
+    
+    -- 无限跳跃
+    InfiniteJump = function()
+        UserInputService.JumpRequest:Connect(function()
+            local character = Players.LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end)
+    end,
+    
+    -- 速度修改
+    SpeedHack = function(speed)
+        local player = Players.LocalPlayer
+        local character = player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        humanoid.WalkSpeed = speed or 50
+    end,
+    
+    -- 跳跃高度修改
+    JumpPower = function(power)
+        local player = Players.LocalPlayer
+        local character = player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+        
+        humanoid.JumpPower = power or 100
+    end,
+    
+    -- 自动点击 (适用于点击类游戏)
+    AutoClick = function()
+        while true do
+            wait(0.1)
+            -- 这里可以添加自动点击逻辑
+            -- mouse1click()
+        end
+    end,
+    
+    -- ESP 玩家透视
+    ESP = function()
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                coroutine.wrap(function()
+                    local character = player.CharacterAdded:Wait()
+                    local highlight = Instance.new("Highlight")
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.Parent = character
+                end)()
+            end
+        end
+    end
+}
+
+-- 卡密验证函数
+local function ValidateKey(key)
+    -- 检查密钥格式
+    if not key or string.len(key) < 5 then
+        return false, "无效的卡密格式"
+    end
+    
+    -- 检查是否为有效密钥
+    local isValid = false
+    for _, validKey in pairs(LicenseSystem.ValidKeys) do
+        if key == validKey then
+            isValid = true
+            break
+        end
+    end
+    
+    if not isValid then
+        return false, "卡密无效"
+    end
+    
+    -- 检查激活次数
+    local activationCount = LicenseSystem.ActivatedKeys[key] or 0
+    if activationCount >= LicenseSystem.MaxActivations then
+        return false, "卡密已达到最大激活次数"
+    end
+    
+    -- 激活成功
+    LicenseSystem.ActivatedKeys[key] = (LicenseSystem.ActivatedKeys[key] or 0) + 1
+    return true, "激活成功!"
+end
+
+-- 创建功能按钮
+local function CreateFunctionButton(name, description, func, yPosition)
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Size = UDim2.new(1, 0, 0, 60)
+    buttonFrame.Position = UDim2.new(0, 0, 0, yPosition)
+    buttonFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+    buttonFrame.BorderSizePixel = 0
+    
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0.3, 0, 0.6, 0)
+    button.Position = UDim2.new(0.65, 0, 0.2, 0)
+    button.Text = "启用"
+    button.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = buttonFrame
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.6, 0, 0.4, 0)
+    label.Position = UDim2.new(0.05, 0, 0.1, 0)
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = buttonFrame
+    
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Size = UDim2.new(0.6, 0, 0.4, 0)
+    descLabel.Position = UDim2.new(0.05, 0, 0.5, 0)
+    descLabel.Text = description
+    descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    descLabel.BackgroundTransparency = 1
+    descLabel.TextSize = 12
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.Parent = buttonFrame
+    
+    button.MouseButton1Click:Connect(function()
+        if ScriptFunctions.Activated then
+            func()
+            button.Text = "已启用"
+            button.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+        else
+            StatusLabel.Text = "错误: 请先激活卡密!"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+    end)
+    
+    buttonFrame.Parent = FunctionsFrame
+    return buttonFrame
+end
+
+-- 添加功能按钮
+local functions = {
+    {"飞行模式", "按 F 切换飞行/行走", ScriptFunctions.Fly},
+    {"穿墙模式", "可以穿过任何墙壁", ScriptFunctions.Noclip},
+    {"无限跳跃", "在空中可以无限跳跃", ScriptFunctions.InfiniteJump},
+    {"速度提升", "增加移动速度", function() ScriptFunctions.SpeedHack(100) end},
+    {"超级跳跃", "增加跳跃高度", function() ScriptFunctions.JumpPower(150) end},
+    {"玩家透视", "高亮显示其他玩家", ScriptFunctions.ESP},
+    {"自动点击", "自动点击功能", ScriptFunctions.AutoClick}
+}
+
+for i, funcData in ipairs(functions) do
+    CreateFunctionButton(funcData[1], funcData[2], funcData[3], (i-1) * 70)
+end
+
+-- 更新滚动框架大小
+FunctionsFrame.CanvasSize = UDim2.new(0, 0, 0, #functions * 70)
+
+-- 按钮事件绑定
+ActivateButton.MouseButton1Click:Connect(function()
+    local key = KeyBox.Text
+    local success, message = ValidateKey(key)
+    
+    StatusLabel.Text = "状态: " .. message
+    if success then
+        StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        ScriptFunctions.Activated = true
+        ActivateButton.Text = "已激活"
+        ActivateButton.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+        KeyBox.Text = "已激活 - " .. string.sub(key, 1, 8) .. "..."
+    else
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    UIManager.ToggleMinimize()
+end)
+
+HideButton.MouseButton1Click:Connect(function()
+    UIManager.ToggleHide()
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+ShowButton.MouseButton1Click:Connect(function()
+    UIManager.Show()
+end)
+
+CloseMiniButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- 键盘快捷键
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        UIManager.ToggleHide()
+    elseif input.KeyCode == Enum.KeyCode.LeftShift then
+        UIManager.ToggleMinimize()
+    elseif input.KeyCode == Enum.KeyCode.F1 then
+        -- F1 显示/隐藏主界面
+        if MainFrame.Visible then
+            UIManager.Hide()
+        else
+            UIManager.Show()
+        end
+    end
+end)
+
+print("多功能脚本 v2.1 已加载!")
+print("=== 使用说明 ===")
+print("1. 输入有效卡密激活")
+print("2. 点击功能按钮使用相应功能")
+print("3. 界面控制:")
+print("   - RightShift: 显示/隐藏界面")
+print("   - LeftShift: 最小化/还原")
+print("   - F1: 快速切换显示")
+print("4. 飞行模式: 按 F 切换")
+
+print("=== 预设卡密 ===")
+for i, key in ipairs(LicenseSystem.ValidKeys) do
+    print(i .. ". " .. key)
+end
+
+-- 安全检测绕过
+local function AntiCheatBypass()
+    -- 基础反检测逻辑
+end
+
+-- 初始化
+AntiCheatBypass()
