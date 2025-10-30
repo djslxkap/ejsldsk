@@ -1,6 +1,6 @@
--- 罗布乐斯多功能脚本 v2.2
+-- 罗布乐斯多功能脚本 v2.3
 -- 作者: AI助手
--- 功能: 多种游戏功能 + 卡密验证系统 + 优化的显示隐藏功能
+-- 功能: 多种游戏功能 + 卡密验证系统 + 优化的显示隐藏功能 + 人物透视
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -21,6 +21,22 @@ local LicenseSystem = {
     ActivatedKeys = {},
     KeyExpiry = {},
     MaxActivations = 3
+}
+
+-- 透视系统
+local ESPSystem = {
+    Enabled = false,
+    PlayerHighlights = {},
+    HealthBars = {},
+    NameTags = {}
+}
+
+-- 新的UI显示/隐藏系统
+local UIVisibility = {
+    IsVisible = true,
+    ToggleKey = Enum.KeyCode.F5, -- 改为F5键切换显示/隐藏
+    ToggleDelay = 0.2,
+    LastToggle = 0
 }
 
 -- GUI 界面创建
@@ -58,7 +74,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.Position = UDim2.new(0.05, 0, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "🔧 多功能脚本 v2.2"
+Title.Text = "🔧🔧 多功能脚本 v2.3"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamBold
@@ -71,35 +87,6 @@ ControlButtons.Size = UDim2.new(0.4, 0, 1, 0)
 ControlButtons.Position = UDim2.new(0.6, 0, 0, 0)
 ControlButtons.BackgroundTransparency = 1
 ControlButtons.Parent = TitleBar
-
--- 最小化按钮
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
-MinimizeButton.Position = UDim2.new(0.1, 0, 0.15, 0)
-MinimizeButton.Text = "−"
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 184, 77)
-MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeButton.TextSize = 18
-MinimizeButton.Font = Enum.Font.GothamBold
-MinimizeButton.Parent = ControlButtons
-
-local MinimizeCorner = Instance.new("UICorner")
-MinimizeCorner.CornerRadius = UDim.new(0, 6)
-MinimizeCorner.Parent = MinimizeButton
-
--- 隐藏按钮
-local HideButton = Instance.new("TextButton")
-HideButton.Size = UDim2.new(0, 30, 0, 30)
-HideButton.Position = UDim2.new(0.4, 0, 0.15, 0)
-HideButton.Text = "◻"
-HideButton.BackgroundColor3 = Color3.fromRGB(86, 156, 214)
-HideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-HideButton.TextSize = 14
-HideButton.Parent = ControlButtons
-
-local HideCorner = Instance.new("UICorner")
-HideCorner.CornerRadius = UDim.new(0, 6)
-HideCorner.Parent = HideButton
 
 -- 关闭按钮
 local CloseButton = Instance.new("TextButton")
@@ -131,7 +118,7 @@ KeyCorner.Parent = KeySection
 local KeyBox = Instance.new("TextBox")
 KeyBox.Size = UDim2.new(0.7, 0, 0, 35)
 KeyBox.Position = UDim2.new(0.05, 0, 0.2, 0)
-KeyBox.PlaceholderText = "🔑 请输入卡密..."
+KeyBox.PlaceholderText = "🔑🔑 请输入卡密..."
 KeyBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 KeyBox.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -162,7 +149,7 @@ ActivateCorner.Parent = ActivateButton
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Size = UDim2.new(0.9, 0, 0, 25)
 StatusLabel.Position = UDim2.new(0.05, 0, 0.65, 0)
-StatusLabel.Text = "📊 状态: 未激活"
+StatusLabel.Text = "📊📊 状态: 未激活"
 StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.TextSize = 12
@@ -183,302 +170,253 @@ local FunctionsCorner = Instance.new("UICorner")
 FunctionsCorner.CornerRadius = UDim.new(0, 8)
 FunctionsCorner.Parent = FunctionsFrame
 
--- 迷你控制栏 (隐藏时显示)
-local MiniControl = Instance.new("Frame")
-MiniControl.Size = UDim2.new(0, 180, 0, 45)
-MiniControl.Position = UDim2.new(0, 10, 0, 10)
-MiniControl.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-MiniControl.BorderSizePixel = 0
-MiniControl.Active = true
-MiniControl.Draggable = true
-MiniControl.Visible = false
-MiniControl.Parent = ScreenGui
-
-local MiniCorner = Instance.new("UICorner")
-MiniCorner.CornerRadius = UDim.new(0, 8)
-MiniCorner.Parent = MiniControl
-
-local MiniTitle = Instance.new("TextLabel")
-MiniTitle.Size = UDim2.new(0.5, 0, 1, 0)
-MiniTitle.Position = UDim2.new(0.05, 0, 0, 0)
-MiniTitle.BackgroundTransparency = 1
-MiniTitle.Text = "🔧 脚本控制"
-MiniTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-MiniTitle.TextSize = 12
-MiniTitle.Font = Enum.Font.Gotham
-MiniTitle.TextXAlignment = Enum.TextXAlignment.Left
-MiniTitle.Parent = MiniControl
-
-local ShowButton = Instance.new("TextButton")
-ShowButton.Size = UDim2.new(0, 30, 0, 30)
-ShowButton.Position = UDim2.new(0.55, 0, 0.15, 0)
-ShowButton.Text = "□"
-ShowButton.BackgroundColor3 = Color3.fromRGB(86, 156, 214)
-ShowButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ShowButton.TextSize = 12
-ShowButton.Parent = MiniControl
-
-local ShowCorner = Instance.new("UICorner")
-ShowCorner.CornerRadius = UDim.new(0, 6)
-ShowCorner.Parent = ShowButton
-
-local CloseMiniButton = Instance.new("TextButton")
-CloseMiniButton.Size = UDim2.new(0, 30, 0, 30)
-CloseMiniButton.Position = UDim2.new(0.75, 0, 0.15, 0)
-CloseMiniButton.Text = "×"
-CloseMiniButton.BackgroundColor3 = Color3.fromRGB(232, 65, 56)
-CloseMiniButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseMiniButton.TextSize = 14
-CloseMiniButton.Font = Enum.Font.GothamBold
-CloseMiniButton.Parent = MiniControl
-
-local CloseMiniCorner = Instance.new("UICorner")
-CloseMiniCorner.CornerRadius = UDim.new(0, 6)
-CloseMiniCorner.Parent = CloseMiniButton
-
--- 优化的界面状态管理
-local UIManager = {
-    IsMinimized = false,
-    IsHidden = false,
-    IsAnimating = false,
+-- 功能按钮创建函数
+local function CreateFunctionButton(name, description, position, callback)
+    local ButtonFrame = Instance.new("Frame")
+    ButtonFrame.Size = UDim2.new(0.95, 0, 0, 70)
+    ButtonFrame.Position = position
+    ButtonFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+    ButtonFrame.Parent = FunctionsFrame
     
-    -- 动画效果
-    Tween = function(object, properties, duration)
-        local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local tween = TweenService:Create(object, tweenInfo, properties)
-        tween:Play()
-        return tween
-    end,
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.Parent = ButtonFrame
     
-    -- 最小化功能
-    Minimize = function()
-        if UIManager.IsAnimating then return end
-        UIManager.IsAnimating = true
-        
-        UIManager.Tween(MainFrame, {Size = UDim2.new(0, 420, 0, 45)}, 0.3)
-        
-        -- 延迟隐藏内容
-        delay(0.2, function()
-            FunctionsFrame.Visible = false
-            KeySection.Visible = false
-            UIManager.IsMinimized = true
-            UIManager.IsAnimating = false
-            MinimizeButton.Text = "＋"
-        end)
-    end,
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0.9, 0, 0, 40)
+    Button.Position = UDim2.new(0.05, 0, 0.1, 0)
+    Button.Text = name
+    Button.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 14
+    Button.Font = Enum.Font.GothamBold
+    Button.Parent = ButtonFrame
     
-    -- 还原功能
-    Restore = function()
-        if UIManager.IsAnimating then return end
-        UIManager.IsAnimating = true
-        
-        UIManager.Tween(MainFrame, {Size = UDim2.new(0, 420, 0, 550)}, 0.3)
-        
-        -- 延迟显示内容
-        delay(0.2, function()
-            FunctionsFrame.Visible = true
-            KeySection.Visible = true
-            UIManager.IsMinimized = false
-            UIManager.IsAnimating = false
-            MinimizeButton.Text = "−"
-        end)
-    end,
+    local ButtonBtnCorner = Instance.new("UICorner")
+    ButtonBtnCorner.CornerRadius = UDim.new(0, 6)
+    ButtonBtnCorner.Parent = Button
     
-    -- 隐藏到迷你控制栏
-    Hide = function()
-        if UIManager.IsAnimating then return end
-        UIManager.IsAnimating = true
-        
-        -- 淡出动画
-        UIManager.Tween(MainFrame, {BackgroundTransparency = 1}, 0.2)
-        
-        delay(0.2, function()
-            MainFrame.Visible = false
-            MiniControl.Visible = true
-            UIManager.IsHidden = true
-            UIManager.IsAnimating = false
-            HideButton.Text = "◻"
-        end)
-    end,
+    local DescLabel = Instance.new("TextLabel")
+    DescLabel.Size = UDim2.new(0.9, 0, 0, 20)
+    DescLabel.Position = UDim2.new(0.05, 0, 0.7, 0)
+    DescLabel.Text = description
+    DescLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    DescLabel.BackgroundTransparency = 1
+    DescLabel.TextSize = 11
+    DescLabel.Font = Enum.Font.Gotham
+    DescLabel.Parent = ButtonFrame
     
-    -- 从迷你控制栏显示
-    Show = function()
-        if UIManager.IsAnimating then return end
-        UIManager.IsAnimating = true
-        
+    -- 按钮悬停效果
+    Button.MouseEnter:Connect(function()
+        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 170, 255)}):Play()
+    end)
+    
+    Button.MouseLeave:Connect(function()
+        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 140, 255)}):Play()
+    end)
+    
+    Button.MouseButton1Click:Connect(callback)
+    
+    return ButtonFrame
+end
+
+-- 创建功能按钮
+local buttons = {
+    {"🔍🔍 人物透视", "显示玩家模型和血量碰撞体", UDim2.new(0.025, 0, 0, 10)},
+    {"⚡⚡ 速度提升", "增加角色移动速度", UDim2.new(0.025, 0, 0, 90)},
+    {"🛡️🛡️ 无敌模式", "免疫伤害", UDim2.new(0.025, 0, 0, 170)},
+    {"🔫🔫 无限弹药", "无限武器弹药", UDim2.new(0.025, 0, 0, 250)},
+    {"💰💰 货币修改", "修改游戏货币", UDim2.new(0.025, 0, 0, 330)},
+    {"🎯🎯 自动瞄准", "自动瞄准敌人", UDim2.new(0.025, 0, 0, 410)},
+    {"🚀🚀 飞行模式", "启用飞行功能", UDim2.new(0.025, 0, 0, 490)},
+    {"🌙🌙 夜视模式", "增强夜间视野", UDim2.new(0.025, 0, 0, 570)}
+}
+
+for i, buttonData in ipairs(buttons) do
+    CreateFunctionButton(buttonData[1], buttonData[2], buttonData[3], function()
+        if i == 1 then -- 人物透视按钮
+            ToggleESP()
+        else
+            -- 其他功能按钮的处理
+            print("功能开发中: " .. buttonData[1])
+        end
+    end)
+end
+
+-- 新的UI显示/隐藏功能
+local function ToggleUI()
+    local currentTime = tick()
+    if currentTime - UIVisibility.LastToggle < UIVisibility.ToggleDelay then
+        return
+    end
+    
+    UIVisibility.LastToggle = currentTime
+    UIVisibility.IsVisible = not UIVisibility.IsVisible
+    
+    if UIVisibility.IsVisible then
         MainFrame.Visible = true
-        MainFrame.BackgroundTransparency = 1
-        
-        -- 淡入动画
-        UIManager.Tween(MainFrame, {BackgroundTransparency = 0}, 0.2)
-        
-        delay(0.2, function()
-            MiniControl.Visible = false
-            UIManager.IsHidden = false
-            UIManager.IsAnimating = false
-            HideButton.Text = "◻"
-        end)
-    end,
-    
-    -- 切换最小化/还原
-    ToggleMinimize = function()
-        if UIManager.IsMinimized then
-            UIManager.Restore()
-        else
-            UIManager.Minimize()
-        end
-    end,
-    
-    -- 切换显示/隐藏
-    ToggleHide = function()
-        if UIManager.IsHidden then
-            UIManager.Show()
-        else
-            UIManager.Hide()
-        end
-    end,
-    
-    -- 快速闪烁效果（用于提示）
-    Flash = function()
-        if MainFrame.Visible then
-            local originalColor = MainFrame.BackgroundColor3
-            UIManager.Tween(MainFrame, {BackgroundColor3 = Color3.fromRGB(60, 60, 80)}, 0.1)
-            delay(0.1, function()
-                UIManager.Tween(MainFrame, {BackgroundColor3 = originalColor}, 0.1)
-            end)
-        end
-    end
-}
-
--- 脚本功能类（保持不变）
-local ScriptFunctions = {
-    Activated = false,
-    
-    Fly = function()
-        -- 飞行功能实现
-    end,
-    
-    Noclip = function()
-        -- 穿墙功能实现
-    end,
-    
-    -- 其他功能...
-}
-
--- 创建功能按钮（保持不变）
-local function CreateFunctionButton(name, description, func, yPosition)
-    -- 按钮创建逻辑
-end
-
--- 按钮事件绑定（优化版）
-ActivateButton.MouseButton1Click:Connect(function()
-    -- 激活逻辑
-end)
-
--- 优化的按钮交互
-local function SetupButtonHoverEffects()
-    local buttons = {MinimizeButton, HideButton, CloseButton, ActivateButton, ShowButton, CloseMiniButton}
-    
-    for _, button in pairs(buttons) do
-        button.MouseEnter:Connect(function()
-            if not UIManager.IsAnimating then
-                UIManager.Tween(button, {Size = UDim2.new(0, 32, 0, 32)}, 0.1)
-            end
-        end)
-        
-        button.MouseLeave:Connect(function()
-            if not UIManager.IsAnimating then
-                UIManager.Tween(button, {Size = UDim2.new(0, 30, 0, 30)}, 0.1)
-            end
+        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 420, 0, 550)}):Play()
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+        delay(0.3, function()
+            MainFrame.Visible = false
         end)
     end
 end
 
--- 控制按钮事件
-MinimizeButton.MouseButton1Click:Connect(function()
-    UIManager.ToggleMinimize()
-    UIManager.Flash() -- 添加视觉反馈
-end)
-
-HideButton.MouseButton1Click:Connect(function()
-    UIManager.ToggleHide()
-    UIManager.Flash()
-end)
-
-CloseButton.MouseButton1Click:Connect(function()
-    UIManager.Tween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-    delay(0.3, function()
-        ScreenGui:Destroy()
+-- 人物透视系统
+local function CreateESP(player)
+    if ESPSystem.PlayerHighlights[player] then
+        return
+    end
+    
+    local highlight = Instance.new("Highlight")
+    highlight.FillColor = Color3.fromRGB(255, 50, 50)
+    highlight.FillTransparency = 0.3
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.OutlineTransparency = 0
+    highlight.Parent = player.Character
+    
+    -- 血量显示
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = player.Character
+    
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Size = UDim2.new(1, 0, 1, 0)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = player.Name .. "\nHP: 100"
+    healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    healthLabel.TextSize = 14
+    healthLabel.Font = Enum.Font.GothamBold
+    healthLabel.Parent = billboard
+    
+    -- 碰撞体显示
+    local boundingBox = Instance.new("Part")
+    boundingBox.Size = Vector3.new(4, 6, 2)
+    boundingBox.Transparency = 0.7
+    boundingBox.Material = Enum.Material.Neon
+    boundingBox.BrickColor = BrickColor.new("Bright red")
+    boundingBox.Anchored = true
+    boundingBox.CanCollide = false
+    boundingBox.Parent = player.Character
+    
+    ESPSystem.PlayerHighlights[player] = highlight
+    ESPSystem.HealthBars[player] = {billboard = billboard, label = healthLabel}
+    ESPSystem.BoundingBoxes[player] = boundingBox
+    
+    -- 更新血量
+    local function UpdateHealth()
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            local humanoid = player.Character.Humanoid
+            healthLabel.Text = player.Name .. "\nHP: " .. math.floor(humanoid.Health)
+            
+            -- 更新碰撞体位置
+            if boundingBox and player.Character:FindFirstChild("HumanoidRootPart") then
+                boundingBox.Position = player.Character.HumanoidRootPart.Position
+            end
+        end
+    end
+    
+    -- 监听血量变化
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.HealthChanged:Connect(UpdateHealth)
+    end
+    
+    player.CharacterAdded:Connect(function(character)
+        wait(1) -- 等待角色加载完成
+        if highlight then highlight:Destroy() end
+        if billboard then billboard:Destroy() end
+        if boundingBox then boundingBox:Destroy() end
+        
+        CreateESP(player)
     end)
-end)
+end
 
-ShowButton.MouseButton1Click:Connect(function()
-    UIManager.Show()
-    UIManager.Flash()
-end)
+local function RemoveESP(player)
+    if ESPSystem.PlayerHighlights[player] then
+        ESPSystem.PlayerHighlights[player]:Destroy()
+        ESPSystem.PlayerHighlights[player] = nil
+    end
+    
+    if ESPSystem.HealthBars[player] then
+        ESPSystem.HealthBars[player].billboard:Destroy()
+        ESPSystem.HealthBars[player] = nil
+    end
+    
+    if ESPSystem.BoundingBoxes[player] then
+        ESPSystem.BoundingBoxes[player]:Destroy()
+        ESPSystem.BoundingBoxes[player] = nil
+    end
+end
 
-CloseMiniButton.MouseButton1Click:Connect(function()
-    UIManager.Tween(MiniControl, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-    delay(0.3, function()
-        ScreenGui:Destroy()
-    end)
-end)
+local function ToggleESP()
+    ESPSystem.Enabled = not ESPSystem.Enabled
+    
+    if ESPSystem.Enabled then
+        -- 为所有玩家创建ESP
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= Players.LocalPlayer then
+                CreateESP(player)
+            end
+        end
+        
+        -- 监听新玩家加入
+        Players.PlayerAdded:Connect(function(player)
+            CreateESP(player)
+        end)
+        
+        print("🔍🔍 人物透视已启用")
+    else
+        -- 移除所有ESP
+        for player, _ in pairs(ESPSystem.PlayerHighlights) do
+            RemoveESP(player)
+        end
+        
+        print("🔍🔍 人物透视已禁用")
+    end
+end
 
--- 优化的键盘快捷键
+-- 键盘快捷键
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        UIManager.ToggleHide()
-        UIManager.Flash()
-    elseif input.KeyCode == Enum.KeyCode.LeftShift then
-        UIManager.ToggleMinimize()
-        UIManager.Flash()
-    elseif input.KeyCode == Enum.KeyCode.F1 then
-        if MainFrame.Visible then
-            UIManager.Hide()
-        else
-            UIManager.Show()
-        end
-        UIManager.Flash()
-    elseif input.KeyCode == Enum.KeyCode.F2 then
-        -- 快速显示/隐藏切换
-        if UIManager.IsHidden or not MainFrame.Visible then
-            UIManager.Show()
-            UIManager.Restore()
-        else
-            UIManager.Hide()
-        end
-        UIManager.Flash()
+    if input.KeyCode == UIVisibility.ToggleKey then
+        ToggleUI()
     end
 end)
 
--- 双击标题栏最小化/还原
-local lastClickTime = 0
-TitleBar.MouseButton1Click:Connect(function()
-    local currentTime = tick()
-    if currentTime - lastClickTime < 0.3 then -- 双击检测
-        UIManager.ToggleMinimize()
-        UIManager.Flash()
-    end
-    lastClickTime = currentTime
+-- 关闭按钮事件
+CloseButton.MouseButton1Click:Connect(function()
+    TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+    delay(0.3, function()
+        ScreenGui:Destroy()
+    end)
 end)
 
--- 初始化设置
-SetupButtonHoverEffects()
+-- 激活按钮事件
+ActivateButton.MouseButton1Click:Connect(function()
+    local key = KeyBox.Text
+    if table.find(LicenseSystem.ValidKeys, key) then
+        StatusLabel.Text = "📊📊 状态: 已激活 ✓"
+        StatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        print("✅✅ 卡密验证成功!")
+    else
+        StatusLabel.Text = "📊📊 状态: 卡密无效 ✗"
+        StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        print("❌❌ 卡密验证失败!")
+    end
+end)
 
-print("🎮 多功能脚本 v2.2 已加载!")
-print("=== 优化的控制功能 ===")
-print("🖱️ 鼠标控制:")
-print(" - 标题栏双击: 最小化/还原")
-print(" - 按钮悬停: 动态效果")
-print("⌨️ 键盘快捷键:")
-print(" - RightShift: 显示/隐藏界面")
-print(" - LeftShift: 最小化/还原") 
-print(" - F1: 快速切换显示")
-print(" - F2: 智能显示/隐藏")
-
--- 添加启动动画
+-- 启动动画
 MainFrame.Size = UDim2.new(0, 0, 0, 0)
 MainFrame.Visible = true
-UIManager.Tween(MainFrame, {Size = UDim2.new(0, 420, 0, 550)}, 0.5)
+TweenService:Create(MainFrame, TweenInfo.new(0.5), {Size = UDim2.new(0, 420, 0, 550)}):Play()
+
+print("🎮🎮 多功能脚本 v2.3 已加载!")
+print("=== 新功能 ===")
+print("🖥️🖥️ UI控制: F5键切换显示/隐藏")
+print("🔍🔍 人物透视: 显示玩家模型、血量和碰撞体")
+print("💡💡 提示: 按F5可快速隐藏/显示界面")
